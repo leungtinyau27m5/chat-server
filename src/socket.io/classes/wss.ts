@@ -9,6 +9,9 @@ class Wss {
   get(id: string) {
     return this.wssUsers[id]
   }
+  set(id: string, user: WssUser) {
+    this.wssUsers[id] = user
+  }
   addVisitor(socket: MySocket) {
     this.wssUsers[socket.id] = new WssUser(socket)
   }

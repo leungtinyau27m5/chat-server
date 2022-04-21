@@ -3,7 +3,6 @@ import Message from '../models/message'
 import Participant from '../models/participant'
 import { DB } from '../models/db.proto'
 import User from '../models/user'
-import wss from 'src/socket.io'
 
 const chatService = {
   createMessage: async (
@@ -24,6 +23,29 @@ const chatService = {
       }
     }
     return null
+  },
+  listMessage: async (
+    userId: number,
+    chatId: number,
+    options: {
+      offset?: number
+      limit?: number
+      wheres?: string[]
+    }
+  ) => {
+    options.offset ??= 0
+    options.limit ??= 20
+    const user = new User(userId)
+    const message = new Message(user, chatId)
+    const result = await message.list(options.offset, options.limit, options.wheres)
+    const [arr1] = await message.getTotal()
+    return {
+      result,
+      options: {
+        ...options,
+        total: arr1[0].total
+      }
+    }
   },
   createChat: async (userId: number, data: Pick<DB.Schema.Chat, 'name' | 'profile_pic' | 'bio' | 'type'>) => {
     const user = new User(userId)
@@ -69,7 +91,14 @@ const chatService = {
     const user = new User(userId)
     const chat = new Chat(user)
     const result = await chat.list(options.offset, options.limit, options.wheres)
-    return result
+    const [arr1] = await chat.getTotal()
+    return {
+      result,
+      options: {
+        ...options,
+        total: arr1[0].total
+      }
+    }
   }
 }
 

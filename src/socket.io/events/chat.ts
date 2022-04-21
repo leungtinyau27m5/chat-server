@@ -2,6 +2,7 @@ import chatService from 'src/db/controllers/chatService'
 import wss from '..'
 import { MySocket, SocketCodeMap } from 'src/socket.io/socket.proto'
 import server from 'src/db/server'
+import { getSimpleError } from 'src/helpers/common'
 
 export function chat(socket: MySocket) {
   socket.on('chat:list', async (offset, limit) => {
@@ -11,11 +12,14 @@ export function chat(socket: MySocket) {
         socket.emit('chat:list', SocketCodeMap.undefinedUser)
         return
       }
-      const result = await chatService.listChat(wssUser.data.id, {
+      const {
+        result,
+        options: { wheres, ...meta }
+      } = await chatService.listChat(wssUser.data.id, {
         offset,
         limit
       })
-      socket.emit('chat:list', SocketCodeMap.success, result[0])
+      socket.emit('chat:list', SocketCodeMap.success, { list: result[0], meta })
     } catch (error) {
       if (error instanceof Error) {
         socket.emit('chat:list', SocketCodeMap.unknown, error)
@@ -33,7 +37,7 @@ export function chat(socket: MySocket) {
       }
       const result = await chatService.createChat(wssUser.data.id, data)
       if (result[0].insertId) {
-        const data = await chatService.listChat(wssUser.data.id, {
+        const { result: data } = await chatService.listChat(wssUser.data.id, {
           limit: 1,
           wheres: [`c.id = ${result[0].insertId}`]
         })
@@ -60,14 +64,14 @@ export function chat(socket: MySocket) {
       }
     }
   })
-  socket.on('chat:get', async (chatId: number) => {
+  socket.on('chat:get', async (chatId) => {
     try {
       const wssUser = wss.get(socket.id)
       if (!wssUser?.data) {
         socket.emit('chat:list', SocketCodeMap.undefinedUser)
         return
       }
-      const result = await chatService.listChat(wssUser.data.id, {
+      const { result } = await chatService.listChat(wssUser.data.id, {
         wheres: [`c.id = ${server.db.escape(chatId)}`]
       })
       socket.emit('chat:get', SocketCodeMap.success, result[0])
@@ -77,6 +81,38 @@ export function chat(socket: MySocket) {
       } else {
         socket.emit('chat:list', SocketCodeMap.unknown, new Error('internal server error'))
       }
+    }
+  })
+  socket.on('message:send', async (chatId, data) => {
+    try {
+      const wssUser = wss.get(socket.id)
+      if (!wssUser?.data) {
+        socket.emit('message:send', SocketCodeMap.undefinedUser)
+        return
+      }
+      const result = await chatService.createMessage(wssUser.data.id, chatId, data)
+      if (!result) {
+        socket.emit('message:send', SocketCodeMap.insertFail, new Error(getSimpleError('insert fail')))
+        return
+      }
+      const id = result[0].insertId
+      const {
+        result: list,
+        options: { wheres, ...meta }
+      } = await chatService.listMessage(wssUser.data.id, chatId, {
+        offset: 0,
+        limit: 1,
+        wheres: [`m.id = ${id}`]
+      })
+      server.socketIo.in(chatId.toString()).emit('message:update', [
+        {
+          list: list[0],
+          meta
+        }
+      ])
+    } catch (error) {
+      console.log(error)
+      socket.emit('message:send', SocketCodeMap.unknown, new Error(getSimpleError(error)))
     }
   })
 }

@@ -2,10 +2,9 @@ import { RequestHandler } from 'express'
 import { jwtVerify } from 'src/utils/jwt'
 import { MyExpressCodeMap } from '../express.proto'
 
-
 export const expressVerifyJwt: RequestHandler = async (req, res, next) => {
-  const { token } = req.body
-  const result = await jwtVerify(token)
+  const { jwt } = req.cookies
+  const result = await jwtVerify(jwt)
   if (result.error) {
     res.status(401).json({
       code: MyExpressCodeMap.invalidJwt,

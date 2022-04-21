@@ -42,13 +42,13 @@ export declare module DB {
       id: number
       sender_id: number
       chat_id: number
-      message: string
-      media: string // 2048
+      message: string | null
+      media: string | null // 2048
       meta: {
         type?: MessageMetaType
         description?: string
         reply?: number
-      }
+      } | null //json?
       deleted: boolean
       created: string
       updated: string

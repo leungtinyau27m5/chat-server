@@ -1,4 +1,4 @@
-import { ResultSetHeader } from 'mysql2'
+import { ResultSetHeader, RowDataPacket } from 'mysql2'
 import server from 'src/db/server'
 import { logSql } from 'src/utils/logger'
 import Message from '../message'
@@ -23,7 +23,15 @@ class Chat {
     logSql(sql)
     return server.db.promise().query<ResultSetHeader>(sql, [data.name, data.type, data.bio, data.profile_pic])
   }
-  update() {}
+  getTotal() {
+    let sql = `
+      SELECT COUNT(*) as total FROM ${Chat.tableName} c
+      INNER JOIN ${Participant.tableName} p
+      ON p.chat_id = c.id AND p.user_id = ?
+    `
+    logSql(sql)
+    return server.db.promise().query<({ total: number } & RowDataPacket)[]>(sql, [this.user.id])
+  }
   get(where?: string[]) {
     let sql = `
       SELECT 
@@ -79,7 +87,7 @@ class Chat {
         CASE c.profile_pic
         WHEN c.type = 'group'
           THEN c.profile_pic
-        WHEN r.type = 'private'
+        WHEN c.type = 'private'
           THEN (
             SELECT u.profile_pic FROM ${User.tableName} u
             WHERE u.id != ${server.db.escape(this.user.id)}
@@ -95,7 +103,7 @@ class Chat {
         LIMIT 1
       ) as m ON m.chat_id = c.id
       LEFT JOIN ${Participant.tableName} p
-      ON p.chat_id = r.id AND p.user_id = ${server.db.escape(this.user.id)}
+      ON p.chat_id = c.id AND p.user_id = ${server.db.escape(this.user.id)}
       LEFT JOIN (
         SELECT u.username, u.email, u.id FROM ${User.tableName} u
       ) as u ON u.id = m.sender_id

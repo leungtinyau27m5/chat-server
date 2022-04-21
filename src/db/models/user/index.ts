@@ -2,7 +2,6 @@ import { ResultSetHeader } from 'mysql2'
 import server from 'src/db/server'
 import Brcypt from 'src/utils/brcypt'
 import { logSql } from 'src/utils/logger'
-import Friend from '../friend'
 import { DB } from '../db.proto'
 import { UserCls } from './user.proto'
 
@@ -18,7 +17,7 @@ class User {
   static tableName = 'users'
   static create(data: Pick<DB.Schema.User, 'username' | 'email' | 'password' | 'profile_pic' | 'bio'>) {
     const sql = `
-      INSERT INTO ${User.tableName} u
+      INSERT INTO ${User.tableName}
         (username, email, password, profile_pic, bio, status)
       VALUES
         (?, ?, ?, ?, ?, 'offline')

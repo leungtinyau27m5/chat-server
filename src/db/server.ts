@@ -4,6 +4,7 @@ import type { ConnectionOptions } from 'mysql2'
 import { createConnection } from 'mysql2'
 import { createServer } from 'http'
 import { SocketEvents } from 'src/socket.io/socket.proto'
+import devCorsList from 'src/constants/dev/cors.json'
 
 class MyServer {
   socketIo
@@ -13,22 +14,12 @@ class MyServer {
   constructor(config: ConnectionOptions) {
     this.expressApp = express()
     this.httpServer = createServer(this.expressApp)
-    this.socketIo = new Server<SocketEvents.ListenEvents, SocketEvents.EmitEvents>(this.httpServer)
+    this.socketIo = new Server<SocketEvents.ListenEvents, SocketEvents.EmitEvents>(this.httpServer, {
+      cors: {
+        origin: devCorsList
+      }
+    })
     this.db = createConnection(config)
-    // this.upload = multer({
-    //   storage,
-    //   limits: {
-    //     fileSize: 8 * 1024 * 10 // bytes
-    //   }
-    // })
-    // this.storage = multer.diskStorage({
-    //   destination: (req, file, callback) => {
-    //     callback(null, './uploads')
-    //   },
-    //   filename: (req, file, callback) => {
-    //     callback(null, file.originalname)
-    //   }
-    // })
   }
 }
 

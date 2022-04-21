@@ -1,8 +1,10 @@
 import multer, { Options } from 'multer'
 import path from 'path'
 
+export const uploadPath = './uploads'
+
 export const getMulterStorage = (isDisk?: boolean) => {
-  const targetPath = path.resolve('./upload')
+  const targetPath = path.resolve(uploadPath)
   const storage = isDisk
     ? multer.diskStorage({
         destination: targetPath
@@ -13,7 +15,7 @@ export const getMulterStorage = (isDisk?: boolean) => {
 
 export const limits: { [key: string]: Options['limits'] } = {
   icon: {
-    fileSize: 8 * 8 * 1024 * 10
+    fileSize: 1024 * 1024 * 5
   }
 }
 

@@ -4,9 +4,14 @@ import { initSocket } from './socket.io'
 import initExpress from './express'
 import fs from 'fs'
 
-fs.access('./uploads', (error) => {
+fs.access('./uploads/users', (error) => {
   if (error) {
-    fs.mkdirSync('./uploads')
+    fs.mkdirSync('./uploads/users/')
+  }
+})
+fs.access('./uploads/images', (error) => {
+  if (error) {
+    fs.mkdirSync('./uploads/images/')
   }
 })
 

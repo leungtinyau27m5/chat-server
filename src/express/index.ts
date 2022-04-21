@@ -4,6 +4,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import userRoutes from './routes/user'
 import devCorsList from 'src/constants/dev/cors.json'
+import mediaRoutes from './routes/media'
 
 export default function initExpress(app: Express) {
   app.use(json())
@@ -16,4 +17,5 @@ export default function initExpress(app: Express) {
     })
   )
   app.use('/user', userRoutes)
+  app.use('/media', mediaRoutes)
 }

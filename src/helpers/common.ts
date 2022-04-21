@@ -1,10 +1,13 @@
 import { FileFilterCallback } from 'multer'
+import { QueryError } from 'mysql2'
+import logger from 'src/utils/logger'
 
 export const getSimpleError = (error: unknown): string => {
   if (error === null) return 'unknown error'
   if (typeof error === 'object') {
     if ('sql' in error) {
-      return (error as any).message
+      logger.error((error as QueryError).message)
+      return (error as QueryError).code
     } else if (error instanceof Error) {
       return error.message
     }
