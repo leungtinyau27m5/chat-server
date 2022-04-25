@@ -2,7 +2,6 @@ import { Socket } from 'socket.io'
 import { ChatCls } from 'src/db/models/chat/chat.proto'
 import { DB } from 'src/db/models/db.proto'
 import { MessageCls } from 'src/db/models/message/message.proto'
-import { JwtResponse } from 'src/utils/jwt'
 
 export declare module SocketEvents {
   interface ListenEvents {
@@ -21,6 +20,13 @@ export declare module SocketEvents {
     ) => void
     'chat:get': (chatId: number) => void
     'message:send': (chatId: number, data: Pick<DB.Schema.Message, 'message' | 'media' | 'meta'>) => void
+    'message:list': (
+      chatId: number,
+      options: {
+        offset?: number
+        limit?: number
+      }
+    ) => void
   }
   interface EmitEvents {
     'user:login': (code: SocketCodeMap, res: Error | Omit<DB.Schema.User, 'password'>) => void
@@ -41,20 +47,26 @@ export declare module SocketEvents {
     'chat:invite': (chatId: number) => void
     'chat:get': (code: SocketCodeMap, res: ChatCls.ListResult | Error) => void
     'message:send': (code: SocketCodeMap, res?: Error) => void
-    'message:update': (
-      data: {
-        list: MessageCls.ListResult
-        meta: {
-          offset?: number
-          limit?: number
-          total: number
-        }
-      }[]
+    'message:update': (data: { chatId: number; list: MessageCls.ListResult }) => void
+    'message:list': (
+      code: SocketCodeMap,
+      res?:
+        | {
+            chatId: number
+            list: MessageCls.ListResult
+            meta: {
+              offset?: number
+              limit?: number
+              total: number
+            }
+          }
+        | Error
     ) => void
   }
 }
 
 export enum SocketCodeMap {
+  success,
   jwtValid,
   jwtInvalid,
   undefinedUser,
@@ -62,8 +74,7 @@ export enum SocketCodeMap {
   unauthorizedUser,
   unauthorizedRole,
   insertFail,
-  unknown,
-  success
+  unknown
 }
 
 export type MySocket = Socket<SocketEvents.ListenEvents, SocketEvents.EmitEvents>

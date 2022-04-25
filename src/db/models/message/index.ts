@@ -27,15 +27,19 @@ class Message {
   }
   list(offset: number, limit: number, wheres?: string[]) {
     let sql = `
-      SELECT m.*, u.id as user_id, u.email, u.username, u.profile_pic, u.status 
+      SELECT 
+        m.*, u.id as user_id, u.email, 
+        u.username, u.profile_pic, u.status, m.created
       FROM ${Message.tableName} m
       INNER JOIN ${User.tableName} u
       ON u.id = m.sender_id
       WHERE m.chat_id = ?
+      AND deleted = 0
     `
     if (wheres) {
       sql += ' AND ' + wheres.map((str) => str).join(' AND ')
     }
+    sql += ' ORDER BY m.created desc '
     sql += ' LIMIT ? '
     sql += ' OFFSET ? '
     console.log(this.chatId)
@@ -44,7 +48,7 @@ class Message {
   }
   getTotal() {
     const sql = `
-      SELECT COUNT(*) FROM ${Message.tableName} m
+      SELECT COUNT(*) as total FROM ${Message.tableName} m
       WHERE m.chat_id = ?
     `
     logSql(sql)

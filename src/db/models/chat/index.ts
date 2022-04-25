@@ -84,6 +84,7 @@ class Chat {
         m.media,
         m.meta,
         m.created as last_msg_time,
+        p.last_seen,
         CASE c.profile_pic
         WHEN c.type = 'group'
           THEN c.profile_pic

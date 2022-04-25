@@ -1,6 +1,7 @@
 import { Server } from 'socket.io'
 import Wss from './classes/wss'
 import { chat } from './events/chat'
+import { message } from './events/message'
 import { user } from './events/user'
 import { MySocket } from './socket.proto'
 
@@ -11,6 +12,7 @@ export function initSocket(io: Server<MySocket>) {
     wss.addVisitor(socket)
     user(socket)
     chat(socket)
+    message(socket)
   })
 }
 

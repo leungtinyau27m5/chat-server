@@ -11,5 +11,6 @@ export declare module ChatCls {
     media: null | string
     meta: null | any
     last_msg_time: null | string
+    last_seen: null | string
   } & RowDataPacket)[]
 }
