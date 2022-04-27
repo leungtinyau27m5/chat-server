@@ -39,10 +39,16 @@ export function chat(socket: MySocket) {
       if (result[0].insertId) {
         const { result: data } = await chatService.listChat(wssUser.data.id, {
           limit: 1,
-          wheres: [`c.id = ${result[0].insertId}`]
+          wheres: [`c.id = ${server.db.escape(result[0].insertId)}`]
         })
         socket.emit('chat:craete', SocketCodeMap.success, data[0])
+        members.push({
+          userId: wssUser.data.id,
+          role: 'owner'
+        })
+        console.log(members)
         const participantsRes = await chatService.addParticipants(wssUser.data.id, result[0].insertId, members)
+        console.log(participantsRes)
         const ids = participantsRes.map((ele) => ele.user_id)
         Object.keys(wss.wssUsers).forEach((key) => {
           const user = wss.wssUsers[key]
@@ -57,11 +63,8 @@ export function chat(socket: MySocket) {
         socket.emit('chat:craete', SocketCodeMap.unknown, new Error('create error'))
       }
     } catch (error) {
-      if (error instanceof Error) {
-        socket.emit('chat:craete', SocketCodeMap.unknown, error)
-      } else {
-        socket.emit('chat:list', SocketCodeMap.unknown, new Error('internal server error'))
-      }
+      console.log(error)
+      socket.emit('chat:craete', SocketCodeMap.unknown, new Error(getSimpleError(error)))
     }
   })
   socket.on('chat:get', async (chatId) => {

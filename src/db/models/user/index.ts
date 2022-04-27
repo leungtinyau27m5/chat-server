@@ -39,7 +39,6 @@ class User {
   static list(rows: { id?: number; email?: string }[]) {
     let sql = `
       SELECT u.id, u.email, u.status FROM ${User.tableName} u
-      WHERE 
     `
     let ids: number[] = []
     let emails: string[] = []
@@ -47,6 +46,7 @@ class User {
       if (ele.id) ids.push(ele.id)
       if (ele.email) emails.push(ele.email)
     })
+    if (ids.length || emails.length) sql += ' WHERE '
     if (ids.length) {
       sql += `u.id IN (${ids.map((id) => server.db.escape(id)).join(', ')})`
       if (emails.length) sql += ' OR '

@@ -15,7 +15,7 @@ class Participant {
 
   create(data: Pick<DB.Schema.Participant, 'role' | 'user_id'>) {
     const sql = `
-      INSERT INTO ${Participant.tableName} p
+      INSERT INTO ${Participant.tableName}
         (chat_id, user_id, role)
       VALUES (?, ?, ?)
     `

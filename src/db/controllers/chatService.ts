@@ -14,12 +14,12 @@ const chatService = {
   addParticipants: async (
     userId: number,
     chatId: number,
-    rows: { id?: number; email?: string; role: DB.Schema.ParticipantRole }[]
+    rows: { userId?: number; email?: string; role: DB.Schema.ParticipantRole }[]
   ) => {
     const result = await User.list(rows)
     const data: { role: DB.Schema.ParticipantRole; user_id: number }[] = []
     result[0].forEach((ele) => {
-      const row = rows.find((row) => row.id === ele.id || row.email === ele.email)
+      const row = rows.find((row) => row.userId === ele.id || row.email === ele.email)
       if (row) {
         data.push({
           role: row.role,

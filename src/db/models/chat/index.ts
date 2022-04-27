@@ -32,47 +32,6 @@ class Chat {
     logSql(sql)
     return server.db.promise().query<({ total: number } & RowDataPacket)[]>(sql, [this.user.id])
   }
-  get(where?: string[]) {
-    let sql = `
-      SELECT 
-      c.*, m.id as msg_id,
-      u.username,
-      u.email,
-      u.id as user_id,
-      m.message,
-      m.media,
-      m.meta,
-      m.created as last_msg_time,
-      CASE c.profile_pic
-      WHEN c.type = 'group'
-        THEN c.profile_pic
-      WHEN r.type = 'private'
-        THEN (
-          SELECT u.profile_pic FROM ${User.tableName} u
-          WHERE u.id != ${server.db.escape(this.user.id)}
-          LIMIT 1
-        )
-      END as 'profile_pic'
-      FROM ${Chat.tableName} c
-      LEFT JOIN (
-        SELECT m.* 
-        FROM ${Message.tableName} m
-        WHERE m.deleted = 0
-        ORDER BY m.created DESC
-        LIMIT 1
-      ) as m ON m.chat_id = c.id
-      LEFT JOIN ${Participant.tableName} p
-      ON p.chat_id = r.id AND p.user_id = ${server.db.escape(this.user.id)}
-      LEFT JOIN (
-        SELECT u.username, u.email, u.id FROM ${User.tableName} u
-      ) as u ON u.id = m.sender_id
-      ORDER BY last_msg_time DESC
-    `
-    if (where) {
-      sql += ' WHERE ' + where.map((str) => str).join(' AND ')
-    }
-    return server.db.promise().query<ChatCls.ListResult>(sql)
-  }
   list(offset: number, limit: number, wheres?: string[]) {
     let sql = `
       SELECT 
@@ -108,11 +67,11 @@ class Chat {
       LEFT JOIN (
         SELECT u.username, u.email, u.id FROM ${User.tableName} u
       ) as u ON u.id = m.sender_id
-      ORDER BY last_msg_time DESC
     `
     if (wheres) {
       sql += ' WHERE ' + wheres.map((str) => str).join(' AND ')
     }
+    sql += ' ORDER BY last_msg_time DESC '
     sql += ' LIMIT ? '
     sql += ' OFFSET ? '
     logSql(sql)
