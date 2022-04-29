@@ -34,33 +34,32 @@ class Chat {
   }
   list(offset: number, limit: number, wheres?: string[]) {
     let sql = `
-      SELECT 
-        c.*, m.id as msg_id,
-        u.username,
-        u.email,
-        u.id as user_id,
-        m.message,
-        m.media,
-        m.meta,
-        m.created as last_msg_time,
-        p.last_seen,
+      SELECT c.*, m.id as msg_id,
+      u.username, u.email,
+      m.message,
+      m.media,
+      m.meta,
+      m.created as last_msg_time,
+      p.role,
+      p.user_id,
+      p.last_seen,
         CASE c.profile_pic
-        WHEN c.type = 'group'
-          THEN c.profile_pic
-        WHEN c.type = 'private'
-          THEN (
-            SELECT u.profile_pic FROM ${User.tableName} u
-            WHERE u.id != ${server.db.escape(this.user.id)}
-            LIMIT 1
+          WHEN c.type = 'group'
+            THEN c.profile_pic
+          WHEN c.type = 'private'
+            THEN (
+              SELECT u.profile_pic 
+              FROM ${User.tableName} u
+              WHERE u.id != ${server.db.escape(this.user.id)}
+              LIMIT 1
           )
         END as 'profile_pic'
       FROM ${Chat.tableName} c
       LEFT JOIN (
-        SELECT m.* 
+        SELECT m.*
         FROM ${Message.tableName} m
         WHERE m.deleted = 0
         ORDER BY m.created DESC
-        LIMIT 1
       ) as m ON m.chat_id = c.id
       LEFT JOIN ${Participant.tableName} p
       ON p.chat_id = c.id AND p.user_id = ${server.db.escape(this.user.id)}
@@ -71,6 +70,7 @@ class Chat {
     if (wheres) {
       sql += ' WHERE ' + wheres.map((str) => str).join(' AND ')
     }
+    sql += ' GROUP BY c.id '
     sql += ' ORDER BY last_msg_time DESC '
     sql += ' LIMIT ? '
     sql += ' OFFSET ? '

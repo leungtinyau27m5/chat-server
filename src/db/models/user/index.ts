@@ -36,14 +36,14 @@ class User {
     logSql(sql)
     return server.db.promise().query<UserCls.LoginResult>(sql, [email])
   }
-  static list(rows: { id?: number; email?: string }[]) {
+  static list(rows: { userId?: number; email?: string }[]) {
     let sql = `
       SELECT u.id, u.email, u.status FROM ${User.tableName} u
     `
     let ids: number[] = []
     let emails: string[] = []
     rows.forEach((ele) => {
-      if (ele.id) ids.push(ele.id)
+      if (ele.userId) ids.push(ele.userId)
       if (ele.email) emails.push(ele.email)
     })
     if (ids.length || emails.length) sql += ' WHERE '

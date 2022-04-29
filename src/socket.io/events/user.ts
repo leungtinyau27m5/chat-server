@@ -5,6 +5,7 @@ import logger from 'src/utils/logger'
 import { getSimpleError } from 'src/helpers/common'
 import wss from '..'
 import WssUser from '../classes/wssUser'
+import server from 'src/db/server'
 
 export function user(socket: MySocket) {
   socket.on('user:login', async (token) => {
@@ -19,11 +20,14 @@ export function user(socket: MySocket) {
       wssUser.login(data.id, data.email)
       wss.set(socket.id, wssUser)
       socket.emit('user:login', SocketCodeMap.jwtValid, data)
+      if (!wssUser.data) return
       try {
         const {
           result: list,
           options: { wheres, ...meta }
-        } = await chatService.listChat(data.id, {})
+        } = await chatService.listChat(data.id, {
+          wheres: [`p.user_id = ${server.db.escape(wssUser.data.id)}`]
+        })
         console.log(meta)
         socket.join(list[0].map((ele) => ele.id.toString()))
         socket.emit('chat:list', SocketCodeMap.success, { list: list[0], meta: meta })

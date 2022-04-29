@@ -17,7 +17,8 @@ export function chat(socket: MySocket) {
         options: { wheres, ...meta }
       } = await chatService.listChat(wssUser.data.id, {
         offset,
-        limit
+        limit,
+        wheres: [`p.user_id = ${server.db.escape(wssUser.data.id)}`]
       })
       socket.emit('chat:list', SocketCodeMap.success, { list: result[0], meta })
     } catch (error) {
