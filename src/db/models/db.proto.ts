@@ -8,6 +8,7 @@ export declare module DB {
       id: number
       username: string // 20
       email: string // 255
+      hash: string
       password: string
       status: UserStatus
       profile_pic: null | string // 2048

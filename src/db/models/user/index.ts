@@ -4,6 +4,7 @@ import Brcypt from 'src/utils/brcypt'
 import { logSql } from 'src/utils/logger'
 import { DB } from '../db.proto'
 import { UserCls } from './user.proto'
+import { v4 as uuidv4 } from 'uuid'
 
 class User {
   id
@@ -28,14 +29,21 @@ class User {
   static create(data: Pick<DB.Schema.User, 'username' | 'email' | 'password' | 'profile_pic' | 'bio'>) {
     const sql = `
       INSERT INTO ${User.tableName}
-        (username, email, password, profile_pic, bio, status)
+        (username, email, hash, password, profile_pic, bio, status)
       VALUES
-        (?, ?, ?, ?, ?, 'offline')
+        (?, ?, ?, ?, ?, ?, 'offline')
     `
     logSql(sql)
     return server.db
       .promise()
-      .query<ResultSetHeader>(sql, [data.username, data.email, Brcypt.hash(data.password), data.profile_pic, data.bio])
+      .query<ResultSetHeader>(sql, [
+        data.username,
+        data.email,
+        uuidv4(),
+        Brcypt.hash(data.password),
+        data.profile_pic,
+        data.bio
+      ])
   }
   static login(email: string) {
     const sql = `

@@ -40,8 +40,8 @@ const userController: { [key: string]: RequestHandler } = {
         return
       }
       const result = await userService.login(email, password)
-      const token = jwtSign(result)
       if (result !== null) {
+        const token = jwtSign(result)
         res.status(200).json({
           code: MyExpressCodeMap.success,
           message: 'success',

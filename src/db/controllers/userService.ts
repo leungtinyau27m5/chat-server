@@ -6,6 +6,7 @@ import User from '../models/user'
 const userService = {
   login: async (email: string, password: string) => {
     const result = await User.login(email)
+    console.log(result)
     if (result[0][0]) {
       const isValid = Brcypt.compare(password, result[0][0].password)
       if (isValid) {

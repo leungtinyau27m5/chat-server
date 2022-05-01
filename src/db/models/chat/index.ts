@@ -6,6 +6,7 @@ import Participant from '../participant'
 import { DB } from '../db.proto'
 import User from '../user'
 import { ChatCls } from './chat.proto'
+import { v4 as uuidv4 } from 'uuid'
 
 class Chat {
   user
@@ -16,12 +17,12 @@ class Chat {
   create(data: Pick<DB.Schema.Chat, 'name' | 'profile_pic' | 'type' | 'bio'>) {
     const sql = `
       INSERT INTO ${Chat.tableName}
-        (name, type, bio, profile_pic)
+        (name, hash, type, bio, profile_pic)
       VALUES
-        (?, ?, ?, ?)
+        (?, ?, ?, ?, ?)
     `
     logSql(sql)
-    return server.db.promise().query<ResultSetHeader>(sql, [data.name, data.type, data.bio, data.profile_pic])
+    return server.db.promise().query<ResultSetHeader>(sql, [data.name, uuidv4(), data.type, data.bio, data.profile_pic])
   }
   getTotal() {
     let sql = `
