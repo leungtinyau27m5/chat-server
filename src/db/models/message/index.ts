@@ -1,4 +1,4 @@
-import { ResultSetHeader, RowDataPacket } from 'mysql2'
+import { escape, ResultSetHeader, RowDataPacket } from 'mysql2'
 import server from 'src/db/server'
 import { logSql } from 'src/utils/logger'
 import { DB } from '../db.proto'
@@ -50,17 +50,32 @@ class Message {
     const sql = `
       SELECT COUNT(*) as total FROM ${Message.tableName} m
       WHERE m.chat_id = ?
+      AND m.deleted = 0
     `
     logSql(sql)
     return server.db.promise().query<({ total: number } & RowDataPacket)[]>(sql, [this.chatId])
   }
   delete(id: number) {
     const sql = `
-      DELETE FROM ${Message.tableName}
+      UPDATE ${Message.tableName}
+      SET deleted = 1
       WHERE id = ?
+      AND sender_id = ?
     `
     logSql(sql)
-    return server.db.promise().query<ResultSetHeader>(sql, [id])
+    return server.db.promise().query<ResultSetHeader>(sql, [id, this.user.id])
+  }
+  edit(id: number, data: Partial<Pick<DB.Schema.Message, 'message'>>) {
+    let sql = `
+      UPDATE ${Message.tableName}
+      SET 
+    `
+    sql += Object.entries(data)
+      .map(([key, value]) => `${key} = ${escape(value)}`)
+      .join(', ')
+    sql += ` WHERE id = ? AND sender_id = ?`
+    logSql(sql)
+    return server.db.promise().query<ResultSetHeader>(sql, [id, this.user.id])
   }
   static tableName = 'messages'
 }

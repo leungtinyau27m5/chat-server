@@ -52,4 +52,61 @@ export function message(socket: MySocket) {
       socket.emit('message:list', SocketCodeMap.unknown, new Error(getSimpleError(error)))
     }
   })
+  socket.on('message:edit', async (chatId, msgId, message) => {
+    try {
+      const wssUser = wss.get(socket.id)
+      if (!wssUser?.data) {
+        socket.emit('message:edit', SocketCodeMap.undefinedUser)
+        return
+      }
+      const result = await messageService.editMessage(wssUser.data.id, chatId, msgId, message)
+      if (result[0].affectedRows) {
+        socket.emit('message:edit', SocketCodeMap.success)
+        server.socketIo.in(chatId.toString()).emit('message:modified', chatId, [
+          {
+            actions: 'edit',
+            id: msgId,
+            message: message
+          }
+        ])
+        return
+      }
+      socket.emit('message:edit', SocketCodeMap.updateFail)
+    } catch (error) {
+      socket.emit('message:edit', SocketCodeMap.updateFail, new Error(getSimpleError(error)))
+    }
+  })
+  socket.on('message:delete', async (chatId, msgId) => {
+    try {
+      const wssUser = wss.get(socket.id)
+      if (!wssUser?.data) {
+        socket.emit('message:delete', SocketCodeMap.undefinedUser, new Error('undefined user'))
+        return
+      }
+      const results = await messageService.deleteMessage(wssUser.data.id, chatId, msgId)
+      const idsx: number[] = []
+      results.map((ele, idx) => {
+        if (ele[0].affectedRows) idsx.push(msgId[idx])
+      })
+      socket.emit('message:delete', SocketCodeMap.success, idsx)
+      server.socketIo.in(chatId.toString()).emit(
+        'message:modified',
+        chatId,
+        idsx.map((id) => ({
+          actions: 'delete' as any,
+          id
+        }))
+      )
+      // server.socketIo.in(chatId.toString()).emit(
+      //   'message:modified',
+      //   chatId,
+      //   idsx.map((id) => ({
+      //     actions: 'delete',
+      //     id
+      //   }))
+      // )
+    } catch (error) {
+      socket.emit('message:delete', SocketCodeMap.updateFail, new Error(getSimpleError(error)))
+    }
+  })
 }

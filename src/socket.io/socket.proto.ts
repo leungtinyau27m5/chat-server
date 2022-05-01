@@ -6,6 +6,7 @@ import { MessageCls } from 'src/db/models/message/message.proto'
 export declare module SocketEvents {
   interface ListenEvents {
     'user:login': (token: string) => void
+    'user:status': (status: DB.Schema.User['status']) => void
     'friend:list': (offset?: number, limit?: number) => void
     'friend:add': (data: { email: string; markedName: string }[]) => void
     'friend:remove': (ids: number[]) => void
@@ -27,9 +28,12 @@ export declare module SocketEvents {
         limit?: number
       }
     ) => void
+    'message:edit': (chatId: number, msgId: number, message: string) => void
+    'message:delete': (chatId: number, msgId: number[]) => void
   }
   interface EmitEvents {
     'user:login': (code: SocketCodeMap, res: Error | Omit<DB.Schema.User, 'password'>) => void
+    'user:status': (code: SocketCodeMap, res?: Error | DB.Schema.User['status']) => void
     'chat:list': (
       code: SocketCodeMap,
       res?:
@@ -62,6 +66,16 @@ export declare module SocketEvents {
           }
         | Error
     ) => void
+    'message:edit': (code: SocketCodeMap, res?: Error) => void
+    'message:delete': (code: SocketCodeMap, res?: Error | number[]) => void
+    'message:modified': (
+      chatId: number,
+      data: {
+        actions: 'edit' | 'delete'
+        id: number
+        message?: string
+      }[]
+    ) => void
   }
 }
 
@@ -74,6 +88,7 @@ export enum SocketCodeMap {
   unauthorizedUser,
   unauthorizedRole,
   insertFail,
+  updateFail,
   unknown
 }
 

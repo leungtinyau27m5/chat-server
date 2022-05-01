@@ -38,8 +38,6 @@ const messageService = {
     const message = new Message(user, chatId)
     const result = await message.list(options.offset, options.limit, options.wheres)
     const [arr1] = await message.getTotal()
-    console.log('message list:')
-    console.log(arr1)
     return {
       result,
       options: {
@@ -47,6 +45,18 @@ const messageService = {
         total: arr1[0].total
       }
     }
+  },
+  editMessage: async (userId: number, chatId: number, msgId: number, msg: string) => {
+    const user = new User(userId)
+    const message = new Message(user, chatId)
+    const result = await message.edit(msgId, { message: msg })
+    return result
+  },
+  deleteMessage: async (userId: number, chatId: number, msgId: number[]) => {
+    const user = new User(userId)
+    const message = new Message(user, chatId)
+    const results = await Promise.all(msgId.map((id) => message.delete(id)))
+    return results
   }
 }
 

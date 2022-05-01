@@ -1,4 +1,4 @@
-import { ResultSetHeader } from 'mysql2'
+import { escape, ResultSetHeader } from 'mysql2'
 import server from 'src/db/server'
 import Brcypt from 'src/utils/brcypt'
 import { logSql } from 'src/utils/logger'
@@ -12,7 +12,17 @@ class User {
   }
 
   jwt() {}
-  update() {}
+  update(data: Partial<Pick<DB.Schema.User, 'username' | 'password' | 'profile_pic' | 'bio' | 'status'>>) {
+    let sql = `
+      UPDATE ${User.tableName} 
+      SET
+    `
+    sql += Object.entries(data)
+      .map(([key, value]) => `${key}=${escape(value)}`)
+      .join(', ')
+    sql += ` WHERE id = ? `
+    return server.db.promise().query<ResultSetHeader>(sql, [this.id])
+  }
 
   static tableName = 'users'
   static create(data: Pick<DB.Schema.User, 'username' | 'email' | 'password' | 'profile_pic' | 'bio'>) {
