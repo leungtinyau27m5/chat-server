@@ -43,18 +43,7 @@ class Chat {
       m.created as last_msg_time,
       p.role,
       p.user_id,
-      p.last_seen,
-        CASE c.profile_pic
-          WHEN c.type = 'group'
-            THEN c.profile_pic
-          WHEN c.type = 'private'
-            THEN (
-              SELECT u.profile_pic 
-              FROM ${User.tableName} u
-              WHERE u.id != ${server.db.escape(this.user.id)}
-              LIMIT 1
-          )
-        END as 'profile_pic'
+      p.last_seen
       FROM ${Chat.tableName} c
       LEFT JOIN (
         SELECT m.*

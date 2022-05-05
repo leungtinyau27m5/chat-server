@@ -9,6 +9,11 @@ fs.access('./uploads/users', (error) => {
     fs.mkdirSync('./uploads/users/')
   }
 })
+fs.access('./uploads/chats', (error) => {
+  if (error) {
+    fs.mkdirSync('./uploads/chats/')
+  }
+})
 fs.access('./uploads/images', (error) => {
   if (error) {
     fs.mkdirSync('./uploads/images/')

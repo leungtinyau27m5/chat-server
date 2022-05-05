@@ -6,7 +6,7 @@ import User from '../models/user'
 import Friend from '../models/friend'
 
 const chatService = {
-  createChat: async (userId: number, data: Pick<DB.Schema.Chat, 'name' | 'profile_pic' | 'bio' | 'type'>) => {
+  createChat: async (userId: number, data: Pick<DB.Schema.Chat, 'name' | 'profile_pic' | 'type' | 'bio'>) => {
     const user = new User(userId)
     const chat = new Chat(user)
     const result = await chat.create(data)
@@ -15,12 +15,13 @@ const chatService = {
   addParticipants: async (
     userId: number,
     chatId: number,
-    rows: { userId?: number; email?: string; role: DB.Schema.ParticipantRole }[]
+    rows: { userId?: number; email?: string; hash?: string; role: DB.Schema.ParticipantRole }[]
   ) => {
     const result = await User.list(rows)
+    console.log('users: ', result)
     const data: { role: DB.Schema.ParticipantRole; user_id: number }[] = []
     result[0].forEach((ele) => {
-      const row = rows.find((row) => row.userId === ele.id || row.email === ele.email)
+      const row = rows.find((row) => row.userId === ele.id || row.email === ele.email || row.hash === ele.hash)
       if (row) {
         data.push({
           role: row.role,

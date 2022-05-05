@@ -1,6 +1,7 @@
-import { ResultSetHeader } from 'mysql2'
+import { escape, ResultSetHeader, RowDataPacket } from 'mysql2'
 import server from 'src/db/server'
 import { logSql } from 'src/utils/logger'
+import Chat from '../chat'
 import { DB } from '../db.proto'
 import User from '../user'
 import { ParticipantCls } from './participant.proto'
@@ -21,6 +22,7 @@ class Participant {
     `
     return server.db.promise().query<ResultSetHeader>(sql, [this.chatId, data.user_id, data.role])
   }
+  get() {}
   remove() {}
   changeRole() {}
 
@@ -43,6 +45,18 @@ class Participant {
     `
     logSql(sql)
     return server.db.promise().query<ParticipantCls.GetRoleResult>(sql, [chatId, userId])
+  }
+
+  static matchUp(userId: number) {
+    const sql = `
+      select c.hash from ${Chat.tableName} c
+      inner join ${Participant.tableName} p
+      on p.chat_id = c.id
+      where c.type = 'private'
+      and p.user_id = ?
+      and p.role = 'owner'
+    `
+    return server.db.promise().query<({ hash: string } & RowDataPacket)[]>(sql, [userId])
   }
 }
 

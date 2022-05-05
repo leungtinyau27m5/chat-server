@@ -29,7 +29,7 @@ class Message {
     let sql = `
       SELECT 
         m.*, u.id as user_id, u.email, 
-        u.username, u.profile_pic, u.status, m.created
+        u.hash, u.username, u.profile_pic, u.status, m.created
       FROM ${Message.tableName} m
       INNER JOIN ${User.tableName} u
       ON u.id = m.sender_id

@@ -13,7 +13,14 @@ export declare module SocketEvents {
     'friend:remove': (ids: number[]) => void
     'friend:listInChat': (chatId: number) => void
     'chat:list': (offset?: number, limit?: number) => void
-    'member:list': (chatId: number) => void
+    'member:list': (
+      chatId: number,
+      options: {
+        offset?: number
+        limit?: number
+      }
+    ) => void
+    'chat:create/private': (data: { hash: string }) => void
     'chat:create': (
       data: Pick<DB.Schema.Chat, 'name' | 'profile_pic' | 'type' | 'bio'>,
       members: {
@@ -23,6 +30,7 @@ export declare module SocketEvents {
       }[]
     ) => void
     'chat:get': (chatId: number) => void
+    'chat:get/private': (userHash: string) => void
     'message:send': (chatId: number, data: Pick<DB.Schema.Message, 'message' | 'media' | 'meta'>) => void
     'message:list': (
       chatId: number,
@@ -51,14 +59,20 @@ export declare module SocketEvents {
         | Error
     ) => void
     'chat:create': (code: SocketCodeMap, res: Error | ChatCls.ListResult) => void
+    'chat:create/private': (code: SocketCodeMap, res: Error | ChatCls.ListResult) => void
     'chat:invite': (chatId: number) => void
     'chat:get': (code: SocketCodeMap, res: ChatCls.ListResult | Error) => void
+    'chat:get/private': (
+      code: SocketCodeMap,
+      res:
+        | Error
+        | {
+            userHash: string
+            chatHash: string | null
+          }
+    ) => void
     'friend:listInChat': (code: SocketCodeMap, res: Error | any[]) => void
-    'friend:status': (res: {
-      userId: number
-      userHash: string
-      status: DB.Schema.UserStatus
-    }) => void
+    'friend:status': (res: { userId: number; userHash: string; status: DB.Schema.UserStatus }) => void
     'friend:list': (
       code: SocketCodeMap,
       res:
@@ -125,7 +139,8 @@ export enum SocketCodeMap {
   unauthorizedRole,
   insertFail,
   updateFail,
-  unknown
+  unknown,
+  fail
 }
 
 export type MySocket = Socket<SocketEvents.ListenEvents, SocketEvents.EmitEvents>

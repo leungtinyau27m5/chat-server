@@ -54,17 +54,19 @@ class User {
     logSql(sql)
     return server.db.promise().query<UserCls.LoginResult>(sql, [email])
   }
-  static list(rows: { userId?: number; email?: string }[]) {
+  static list(rows: { userId?: number; email?: string; hash?: string }[]) {
     let sql = `
-      SELECT u.id, u.email, u.status FROM ${User.tableName} u
+      SELECT u.id, u.email, u.hash, u.status FROM ${User.tableName} u
     `
     let ids: number[] = []
     let emails: string[] = []
+    let hashs: string[] = []
     rows.forEach((ele) => {
       if (ele.userId) ids.push(ele.userId)
       if (ele.email) emails.push(ele.email)
+      if (ele.hash) hashs.push(ele.hash)
     })
-    if (ids.length || emails.length) sql += ' WHERE '
+    if (ids.length || emails.length || hashs.length) sql += ' WHERE '
     if (ids.length) {
       sql += `u.id IN (${ids.map((id) => server.db.escape(id)).join(', ')})`
       if (emails.length) sql += ' OR '
@@ -72,7 +74,16 @@ class User {
     if (emails.length) {
       sql += `u.email IN (${emails.map((email) => server.db.escape(email)).join(', ')})`
     }
+    if (hashs.length) {
+      sql += `u.hash IN (${hashs.map((hash) => escape(hash)).join(', ')})`
+    }
     return server.db.promise().query<UserCls.ListResult>(sql)
+  }
+
+  static get(data: { hash?: string; id?: number; email?: string }) {
+    let sql = `
+      SELECT u.id, u.email, u.hash
+    `
   }
 }
 
