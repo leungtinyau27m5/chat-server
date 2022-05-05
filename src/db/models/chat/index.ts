@@ -78,7 +78,29 @@ class Chat {
     logSql(sql)
     return server.db.promise().query<ChatCls.ListResult>(sql, [limit, offset])
   }
-
+  getMembers(chatId: number, offset: number, limit: number) {
+    const sql = `
+      SELECT 
+        p.last_seen, p.role, p.created as joinIn,
+        u.username, u.id, u.status, u.hash, u.bio, u.profile_pic
+      FROM ${Participant.tableName} p
+      INNER JOIN ${User.tableName} u
+      ON u.id = p.user_id
+      WHERE p.chat_id = ?
+      LIMIT ?
+      OFFSET ? 
+    `
+    logSql(sql)
+    return server.db.promise().query<RowDataPacket[]>(sql, [chatId, limit, offset])
+  }
+  getTotalMember(chatId: number) {
+    const sql = `
+      SELECT COUNT(*) as total FROM ${Participant.tableName} p
+      WHERE p.chat_id = ?
+    `
+    logSql(sql)
+    return server.db.promise().query<({ total: number } & RowDataPacket)[]>(sql, [chatId])
+  }
   static tableName = 'chats'
 }
 

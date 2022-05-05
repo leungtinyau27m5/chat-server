@@ -1,6 +1,7 @@
 import { Server } from 'socket.io'
 import Wss from './classes/wss'
 import { chat } from './events/chat'
+import friend from './events/friend'
 import { message } from './events/message'
 import { user } from './events/user'
 import { MySocket } from './socket.proto'
@@ -13,6 +14,7 @@ export function initSocket(io: Server<MySocket>) {
     user(socket)
     chat(socket)
     message(socket)
+    friend(socket)
   })
 }
 

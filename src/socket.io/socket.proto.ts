@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io'
 import { ChatCls } from 'src/db/models/chat/chat.proto'
 import { DB } from 'src/db/models/db.proto'
+import { FriendCls } from 'src/db/models/friend/friend.proto'
 import { MessageCls } from 'src/db/models/message/message.proto'
 
 export declare module SocketEvents {
@@ -10,7 +11,9 @@ export declare module SocketEvents {
     'friend:list': (offset?: number, limit?: number) => void
     'friend:add': (data: { email: string; markedName: string }[]) => void
     'friend:remove': (ids: number[]) => void
+    'friend:listInChat': (chatId: number) => void
     'chat:list': (offset?: number, limit?: number) => void
+    'member:list': (chatId: number) => void
     'chat:create': (
       data: Pick<DB.Schema.Chat, 'name' | 'profile_pic' | 'type' | 'bio'>,
       members: {
@@ -47,9 +50,42 @@ export declare module SocketEvents {
           }
         | Error
     ) => void
-    'chat:craete': (code: SocketCodeMap, res: Error | ChatCls.ListResult) => void
+    'chat:create': (code: SocketCodeMap, res: Error | ChatCls.ListResult) => void
     'chat:invite': (chatId: number) => void
     'chat:get': (code: SocketCodeMap, res: ChatCls.ListResult | Error) => void
+    'friend:listInChat': (code: SocketCodeMap, res: Error | any[]) => void
+    'friend:status': (res: {
+      userId: number
+      userHash: string
+      status: DB.Schema.UserStatus
+    }) => void
+    'friend:list': (
+      code: SocketCodeMap,
+      res:
+        | Error
+        | {
+            list: FriendCls.ListResult
+            meta: {
+              offset?: number
+              limit?: number
+              total: number
+            }
+          }
+    ) => void
+    'member:list': (
+      code: SocketCodeMap,
+      res?:
+        | {
+            id: number
+            list: any[]
+            meta: {
+              offset?: number
+              limit?: number
+              total: number
+            }
+          }
+        | Error
+    ) => void
     'message:send': (code: SocketCodeMap, res?: Error) => void
     'message:update': (data: { chatId: number; list: MessageCls.ListResult }) => void
     'message:list': (

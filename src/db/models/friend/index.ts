@@ -1,7 +1,8 @@
-import { ResultSetHeader } from 'mysql2'
+import { escape, ResultSetHeader, RowDataPacket } from 'mysql2'
 import server from 'src/db/server'
 import { logSql } from 'src/utils/logger'
 import { DB } from '../db.proto'
+import Participant from '../participant'
 import User from '../user'
 import { FriendCls } from './friend.proto'
 
@@ -44,17 +45,46 @@ class Friend {
     logSql(sql)
     return server.db.promise().query<ResultSetHeader>(sql, [this.user.id])
   }
-  list() {
-    const sql = `
-    SELECT f.*, u.username, u.email, u.status, u.profile_pic, u.bio FROM ${Friend.tableName} f
-    WHERE f.owner_id = ?
-    LEFT JOIN ${User.tableName} u
-    ON u.id = f.user_id
-  `
+  list(offset?: number, limit?: number, wheres?: string[]) {
+    let sql = `
+      SELECT 
+      f.owner_id, f.user_id, f.marked_name, f.created, u.username, u.status, 
+      u.profile_pic, u.bio 
+      FROM ${Friend.tableName} f
+      LEFT JOIN ${User.tableName} u
+      ON u.id = f.user_id
+    `
+    if (wheres) {
+      sql += ' WHERE '
+      sql += wheres.join(' AND ')
+    }
+    if (limit !== undefined) sql += ` LIMIT ${escape(limit)} `
+    if (offset !== undefined) sql += ` OFFSET ${escape(offset)} `
     logSql(sql)
     return server.db.promise().query<FriendCls.ListResult>(sql, [this.user.id])
   }
-
+  total() {
+    let sql = `
+      SELECT COUNT(*) as total FROM ${Friend.tableName} f
+      WHERE f.owner_id = ?
+    `
+    logSql(sql)
+    return server.db.promise().query<({ total: number } & RowDataPacket)[]>(sql, [this.user.id])
+  }
+  listInChat(chatId: number) {
+    const sql = `
+      SELECT u.id, u.status, u.username, u.hash FROM ${Friend.tableName} f
+      INNER JOIN ${User.tableName} u
+      ON u.id = f.user_id
+      INNER JOIN ${Participant.tableName} p
+      ON p.user_id = f.user_id
+      WHERE p.chat_id = ?
+      AND f.owner_id = ?
+      ORDER BY FIELD(u.status, 'available', 'busy', 'leave')
+    `
+    logSql(sql)
+    return server.db.promise().query<RowDataPacket[]>(sql, [chatId, this.user.id])
+  }
   static tableName = 'friends'
 }
 

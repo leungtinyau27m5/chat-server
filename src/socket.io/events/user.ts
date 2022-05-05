@@ -16,12 +16,17 @@ export function user(socket: MySocket) {
         socket.emit('user:login', SocketCodeMap.jwtInvalid, new Error(jwtRes.error.message))
         return
       }
-      const { id, email } = jwtRes.data
+      const { id, email, hash } = jwtRes.data
       const data = await userService.tokenLogin(email)
       if (!data) return
       const { password, ...userData } = data
       const wssUser = new WssUser(socket)
-      wssUser.login(id, email)
+      await wssUser.login(id, email, hash)
+      userService.notifyFriend(id, {
+        id,
+        hash: userData.hash,
+        status: userData.status
+      })
       wss.set(socket.id, wssUser)
       socket.emit('user:login', SocketCodeMap.jwtValid, userData)
       try {
@@ -51,6 +56,12 @@ export function user(socket: MySocket) {
       const result = await userService.updateStatus(wssUser.data.id, status)
       if (result.affectedRows) {
         socket.emit('user:status', SocketCodeMap.success, status)
+        const { id, email, hash } = wssUser.data
+        userService.notifyFriend(id, {
+          id,
+          hash,
+          status
+        })
         return
       }
       socket.emit('user:status', SocketCodeMap.unknown)

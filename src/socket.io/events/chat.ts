@@ -42,7 +42,7 @@ export function chat(socket: MySocket) {
           limit: 1,
           wheres: [`c.id = ${server.db.escape(result[0].insertId)}`]
         })
-        socket.emit('chat:craete', SocketCodeMap.success, data[0])
+        socket.emit('chat:create', SocketCodeMap.success, data[0])
         members.push({
           userId: wssUser.data.id,
           role: 'owner'
@@ -61,11 +61,11 @@ export function chat(socket: MySocket) {
           }
         })
       } else {
-        socket.emit('chat:craete', SocketCodeMap.unknown, new Error('create error'))
+        socket.emit('chat:create', SocketCodeMap.unknown, new Error('create error'))
       }
     } catch (error) {
       console.log(error)
-      socket.emit('chat:craete', SocketCodeMap.unknown, new Error(getSimpleError(error)))
+      socket.emit('chat:create', SocketCodeMap.unknown, new Error(getSimpleError(error)))
     }
   })
   socket.on('chat:get', async (chatId) => {
@@ -81,10 +81,30 @@ export function chat(socket: MySocket) {
       socket.emit('chat:get', SocketCodeMap.success, result[0])
     } catch (error) {
       if (error instanceof Error) {
-        socket.emit('chat:craete', SocketCodeMap.unknown, error)
+        socket.emit('chat:create', SocketCodeMap.unknown, error)
       } else {
         socket.emit('chat:list', SocketCodeMap.unknown, new Error('internal server error'))
       }
+    }
+  })
+  socket.on('member:list', async (chatId) => {
+    try {
+      const wssUser = wss.get(socket.id)
+      if (!wssUser?.data) {
+        socket.emit('member:list', SocketCodeMap.undefinedUser)
+        return
+      }
+      const { result, options } = await chatService.listMember(wssUser.data.id, chatId, {})
+      console.log(result)
+      socket.emit('member:list', SocketCodeMap.success, {
+        id: chatId,
+        list: result[0],
+        meta: {
+          ...options
+        }
+      })
+    } catch (error) {
+      socket.emit('member:list', SocketCodeMap.unknown, new Error(getSimpleError(error)))
     }
   })
 }

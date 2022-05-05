@@ -3,6 +3,7 @@ import WssUser from './wssUser'
 
 class Wss {
   wssUsers: { [key: string]: WssUser | null }
+  static mappedId: { [userId: number]: string } = {}
   constructor() {
     this.wssUsers = {}
   }
