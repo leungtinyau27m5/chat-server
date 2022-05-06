@@ -48,8 +48,14 @@ class Friend {
   list(offset?: number, limit?: number, wheres?: string[]) {
     let sql = `
       SELECT 
-      f.owner_id, f.user_id, f.marked_name, f.created, u.username, u.status, 
-      u.profile_pic, u.bio 
+      f.owner_id, f.user_id, f.marked_name, f.created, u.username, 
+      u.profile_pic, u.bio,
+      CASE u.status
+        WHEN u.status = 'hide'
+          THEN 'offline'
+        ELSE
+          u.status
+      END as 'status'
       FROM ${Friend.tableName} f
       LEFT JOIN ${User.tableName} u
       ON u.id = f.user_id
@@ -61,7 +67,7 @@ class Friend {
     if (limit !== undefined) sql += ` LIMIT ${escape(limit)} `
     if (offset !== undefined) sql += ` OFFSET ${escape(offset)} `
     logSql(sql)
-    return server.db.promise().query<FriendCls.ListResult>(sql, [this.user.id])
+    return server.db.promise().query<FriendCls.ListResult>(sql)
   }
   total() {
     let sql = `
@@ -73,14 +79,21 @@ class Friend {
   }
   listInChat(chatId: number) {
     const sql = `
-      SELECT u.id, u.status, u.username, u.hash FROM ${Friend.tableName} f
+      SELECT u.id, u.username, u.hash,
+      CASE u.status
+      WHEN u.status = 'hide'
+        THEN 'offline'
+      ELSE
+        u.status
+      END as 'status'
+      FROM ${Friend.tableName} f
       INNER JOIN ${User.tableName} u
       ON u.id = f.user_id
       INNER JOIN ${Participant.tableName} p
       ON p.user_id = f.user_id
       WHERE p.chat_id = ?
       AND f.owner_id = ?
-      ORDER BY FIELD(u.status, 'available', 'busy', 'leave')
+      ORDER BY FIELD(status, 'available', 'busy', 'leave')
     `
     logSql(sql)
     return server.db.promise().query<RowDataPacket[]>(sql, [chatId, this.user.id])

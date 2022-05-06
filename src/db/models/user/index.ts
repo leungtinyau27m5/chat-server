@@ -56,7 +56,14 @@ class User {
   }
   static list(rows: { userId?: number; email?: string; hash?: string }[]) {
     let sql = `
-      SELECT u.id, u.email, u.hash, u.status FROM ${User.tableName} u
+      SELECT u.id, u.email, u.hash, 
+      CASE u.status
+      WHEN u.status = 'hide'
+        THEN 'offline'
+      ELSE
+        u.status
+      END as 'status'
+      FROM ${User.tableName} u
     `
     let ids: number[] = []
     let emails: string[] = []

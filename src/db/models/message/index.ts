@@ -29,7 +29,13 @@ class Message {
     let sql = `
       SELECT 
         m.*, u.id as user_id, u.email, 
-        u.hash, u.username, u.profile_pic, u.status, m.created
+        u.hash, u.username, u.profile_pic, m.created,
+        CASE u.status
+        WHEN u.status = 'hide'
+          THEN 'offline'
+        ELSE
+          u.status
+      END as 'status'
       FROM ${Message.tableName} m
       INNER JOIN ${User.tableName} u
       ON u.id = m.sender_id

@@ -71,11 +71,18 @@ class Chat {
     const sql = `
       SELECT 
         p.last_seen, p.role, p.created as joinIn,
-        u.username, u.id, u.status, u.hash, u.bio, u.profile_pic
+        u.username, u.id, u.hash, u.bio, u.profile_pic,
+        CASE u.status
+        WHEN u.status = 'hide'
+          THEN 'offline'
+        ELSE
+          u.status
+      END as 'status'
       FROM ${Participant.tableName} p
       INNER JOIN ${User.tableName} u
       ON u.id = p.user_id
       WHERE p.chat_id = ?
+      ORDER BY FIELD(status, 'available', 'busy', 'leave', 'offline')
       LIMIT ?
       OFFSET ? 
     `
